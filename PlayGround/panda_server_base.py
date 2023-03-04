@@ -41,7 +41,7 @@ from direct.task import Task
 from scipy.spatial.transform import Rotation
 from ControlVAECore.Env.vclode_track_env import VCLODETrackEnv
 import numpy as np
-from panda3d.core import LQuaternionf,LVecBase3
+from panda3d.core import LQuaternionf,LVecBase3,LVector3f
 from Panda3dCameraCtrl import CameraCtrl
 from panda3d.core import ClockObject
 import panda3d.core as pc
@@ -112,6 +112,7 @@ class PandaServerBase(ShowBase):
         props = pc.WindowProperties()
         props.setSize(max(xSize-200, 800), max(ySize-200, 600))
         self.win.requestProperties(props)
+        self.video = None
         
         
     def load_box(self, radius = 0.5):
@@ -163,7 +164,10 @@ class PandaServerBase(ShowBase):
     def load_character_state_to_model(self, character, model_root):
         joint_names = character.get_joint_names()
         nodes = [model_root.find('**/'+i) for i in joint_names]
-        
+
+        # print("nodes:")
+        # print(nodes)
+
         rot = character.joint_info.get_local_q()
                 
         # self._cnt += 1
@@ -196,9 +200,15 @@ class PandaServerBase(ShowBase):
         
         rot *= self._neg 
         rot = rot[...,self._perm]
+
+        frame = {'joints': {}}
         
         for node, quat in zip(nodes, rot):
-            node.setQuat(LQuaternionf(*quat))
+            qqq = LQuaternionf(*quat)
+            # print(node.getName())
+            # print(qqq)
+            node.setQuat(qqq)
+            frame['joints'][node.getName()] = {'rot': qqq}
                     
         # root
         rot = character.get_body_quat_at(0)
@@ -210,6 +220,14 @@ class PandaServerBase(ShowBase):
         
         pos = character.get_body_pos_at(0)
         model_root.setPos(-pos[0], -pos[2], pos[1])
+
+        frame['root'] = {'pos': pos, 'rot': rot}
+
+        frame['box'] = {'pos': self.box.getPos(), 'rot': self.box.getQuat()}
+        frame['hugebox'] = {'pos': self.hugebox.getPos(), 'rot': self.hugebox.getQuat()}
+
+        if self.video is not None:
+            self.video['frames'].append(frame)
         
         # others
     
@@ -337,7 +355,7 @@ class PandaServerBase(ShowBase):
         
         # Directional light 01
         directionalLight = pc.DirectionalLight('directionalLight')
-        directionalLight.setColor((0.4, 0.4, 0.4, 1))
+        directionalLight.setColor((101 / 255, 101 / 255, 233 / 255, 1))
         directionalLightNP = self.render.attachNewNode(directionalLight)
         # This light is facing backwards, towards the camera.
         directionalLightNP.setPos(10, 10, 10)
@@ -354,7 +372,7 @@ class PandaServerBase(ShowBase):
         # Directional light 02
         directionalLight = pc.DirectionalLight('directionalLight1')
         # directionalLight.setColorTemperature(6500)        
-        directionalLight.setColor((0.4, 0.4, 0.4, 1))
+        directionalLight.setColor((101 / 255, 101 / 255, 233 / 255, 1))
         directionalLightNP = self.render.attachNewNode(directionalLight)
         # This light is facing forwards, away from the camera.
         directionalLightNP.setPos(-10, 10, 10)
@@ -371,8 +389,8 @@ class PandaServerBase(ShowBase):
         
         # Directional light 03
         directionalLight = pc.DirectionalLight('directionalLight1')
-        directionalLight.setColorTemperature(6500)        
-        # directionalLight.setColor((0.6, 0.6, 0.6, 1))
+        # directionalLight.setColorTemperature(6500)        
+        directionalLight.setColor((101 / 255, 101 / 255, 233 / 255, 1))
         directionalLightNP = self.render.attachNewNode(directionalLight)
         # This light is facing forwards, away from the camera.
         directionalLightNP.setPos(0, -10, 20)

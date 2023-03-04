@@ -40,6 +40,7 @@ import argparse
 from direct.task import Task
 import time
 import numpy as np
+
 class RandomPlayground(ControlVAE):
     def __init__(self, observation_size, action_size, delta_size, env, **kargs):
         super(RandomPlayground, self).__init__(observation_size, action_size, delta_size, env, **kargs)
@@ -159,6 +160,8 @@ class RandomPlayground(ControlVAE):
             self.panda_server.taskMgr.add(self.update_panda, 'update_panda')            
             self.panda_server.accept('b', self.throw_huge_box_to_character)
             self.panda_server.accept('space', self.throw_box_to_character)
+            self.panda_server.accept('s', self.start_record)
+            self.panda_server.accept('e', self.end_record)
             
             self.panda_server.run()
             
@@ -211,6 +214,17 @@ class RandomPlayground(ControlVAE):
         args.update(config)
 
         return args
+    
+    def start_record(self):
+        print("start record")
+        self.panda_server.video = {'frames': []}
+
+    def end_record(self):
+        print("stop record")
+        print(self.panda_server.video)
+        f = open('video.data', 'w')
+        f.write(str(self.panda_server.video))
+        f.close()
 
 
 if __name__ == '__main__':
@@ -224,3 +238,4 @@ if __name__ == '__main__':
     data_file = fd.askopenfilename(filetypes=[('DATA','*.data')])
     playground.try_load(data_file)
     playground.run()
+    print("Bye")
