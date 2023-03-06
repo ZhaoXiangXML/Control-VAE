@@ -221,7 +221,7 @@ class PandaServerBase(ShowBase):
         pos = character.get_body_pos_at(0)
         model_root.setPos(-pos[0], -pos[2], pos[1])
 
-        frame['root'] = {'pos': pos, 'rot': rot}
+        frame['root'] = {'pos': model_root.getPos(), 'rot': rot}
 
         frame['box'] = {'pos': self.box.getPos(), 'rot': self.box.getQuat()}
         frame['hugebox'] = {'pos': self.hugebox.getPos(), 'rot': self.hugebox.getQuat()}
